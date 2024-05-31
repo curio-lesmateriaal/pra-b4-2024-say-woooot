@@ -18,7 +18,7 @@ namespace PRA_B4_FOTOKIOSK.controller
         // Start methode die wordt aangeroepen wanneer de zoek pagina opent.
         public void Start()
         {
-
+            SearchManager.Instance = Window;
         }
 
         // Wordt uitgevoerd wanneer er op de Zoeken knop is geklikt

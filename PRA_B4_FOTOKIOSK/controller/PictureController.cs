@@ -29,6 +29,9 @@ namespace PRA_B4_FOTOKIOSK.controller
 
             var now = DateTime.Now;
             int today = (int)now.DayOfWeek;
+            var minTime = now.AddMinutes(-30); // 30 minuten geleden
+            var maxTime = now.AddMinutes(-2);  // 2 minuten geleden
+
             // foreach is een for-loop die door een array loopt
             foreach (string dir in Directory.GetDirectories(@"../../../fotos"))
             {
@@ -43,11 +46,24 @@ namespace PRA_B4_FOTOKIOSK.controller
                     */
                     foreach (string file in Directory.GetFiles(dir))
                     {
-                        /**
-                         * file string is de file van de foto. Bijvoorbeeld:
-                         * \fotos\0_Zondag\10_05_30_id8824.jpg
-                         */
-                        PicturesToDisplay.Add(new KioskPhoto() { Id = 0, Source = file });
+                        string fileName = Path.GetFileNameWithoutExtension(file);
+                        string[] timeParts = fileName.Split('_');
+
+                        if (timeParts.Length >= 3 &&
+                            int.TryParse(timeParts[0], out int hour) &&
+                            int.TryParse(timeParts[1], out int minute) &&
+                            int.TryParse(timeParts[2], out int second))
+                        {
+                            var photoTime = new DateTime(now.Year, now.Month, now.Day, hour, minute, second);
+                            if (photoTime >= minTime && photoTime <= maxTime)
+                            {
+                                /**
+                                 * file string is de file van de foto. Bijvoorbeeld:
+                                 * \fotos\0_Zondag\10_05_30_id8824.jpg
+                                */
+                                PicturesToDisplay.Add(new KioskPhoto() { Id = 0, Source = file });
+                            }
+                        }
                     }
                 }
             }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace PRA_B4_FOTOKIOSK.controller
 {
@@ -14,7 +15,7 @@ namespace PRA_B4_FOTOKIOSK.controller
 
         public static Home Window { get; set; }
         private double? runningTotal = 0;
-        private List<string> receiptItems = new List<string>();
+        private List<OrderedProduct> orderedProducts = new List<OrderedProduct>();
 
         public void Start()
         {
@@ -65,23 +66,29 @@ namespace PRA_B4_FOTOKIOSK.controller
         // Wordt uitgevoerd wanneer er op de Toevoegen knop is geklikt
         public void AddButtonClick()
         {
-            var selectedProducts = ShopManager.GetSelectedProduct();
+            var selectedProduct = ShopManager.GetSelectedProduct();
             int? fotoId = ShopManager.GetFotoId();
             int? amount = ShopManager.GetAmount();
 
-            if(selectedProducts != null)
+            if (selectedProduct != null && fotoId.HasValue && amount.HasValue)
             {
-                double? totalPrice = selectedProducts.Price * amount;
+                double? totalPrice = selectedProduct.Price * amount;
+                double? price = selectedProduct.Price;
 
                 runningTotal += totalPrice;
 
-                string productDetails = $"{amount}x {selectedProducts.Name} (Foto-ID: {fotoId}) - {totalPrice:C}";
-
-                receiptItems.Add(productDetails);
+                orderedProducts.Add(new OrderedProduct
+                {
+                    FotoId = fotoId.Value,
+                    ProductName = selectedProduct.Name,
+                    Amount = amount.Value,
+                    TotalPrice = totalPrice.Value,
+                    Price = price.Value,
+                });
 
                 updateReceipt();
-
-            } else
+            }
+            else
             {
                 ShopManager.SetShopReceipt("Error: Ongeldige Invoer");
             }
@@ -90,10 +97,10 @@ namespace PRA_B4_FOTOKIOSK.controller
         private void updateReceipt()
         {
             StringBuilder receipt = new StringBuilder();
-            
-            foreach(string item in receiptItems)
+
+            foreach (var orderedProduct in orderedProducts)
             {
-                receipt.AppendLine(item);
+                receipt.AppendLine($"{orderedProduct.ProductName} (Foto-ID: {orderedProduct.FotoId})            {orderedProduct.Amount} * {orderedProduct.Price:C}              {orderedProduct.TotalPrice:C}");
             }
 
             receipt.AppendLine($"Totaal: {runningTotal:C}");
@@ -106,14 +113,39 @@ namespace PRA_B4_FOTOKIOSK.controller
         public void ResetButtonClick()
         {
             runningTotal = 0;
-            receiptItems.Clear();
+            orderedProducts.Clear();
             ShopManager.SetShopReceipt("Eindbedrag\n€");
         }
 
         // Wordt uitgevoerd wanneer er op de Save knop is geklikt
         public void SaveButtonClick()
         {
-        }
+            // Controleer of er items op de bon staan om op te slaan
+            if (orderedProducts.Count > 0)
+            {
+                // Genereer een unieke bestandsnaam voor de bon
+                string fileName = $@"C:\Users\jordy\Links\Kassabon_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
 
+                try
+                {
+                    // Schrijf de inhoud van de bon naar een tekstbestand
+                    File.WriteAllText(fileName, ShopManager.GetShopReceipt());
+
+                    // Geef een melding dat de bon succesvol is opgeslagen
+                    ShopManager.ShowMessage($"De kassabon is opgeslagen als Kassabon_{DateTime.Now:yyyyMMdd_HHmmss}.txt");
+                }
+                catch (Exception ex)
+                {
+                    // Geef een melding als er een fout optreedt bij het opslaan van de bon
+                    ShopManager.ShowMessage($"Er is een fout opgetreden bij het opslaan van de kassabon: {ex.Message}");
+                }
+            }
+            else
+            {
+                // Geef een melding als er geen items op de bon staan om op te slaan
+                ShopManager.ShowMessage("Er zijn geen items op de bon om op te slaan.");
+            }
+        }
     }
 }
+
