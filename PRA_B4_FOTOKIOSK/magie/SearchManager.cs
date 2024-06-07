@@ -52,5 +52,10 @@ namespace PRA_B4_FOTOKIOSK.magie
         {
             SetSearchImageInfo(GetSearchImageInfo() + text);
         }
+
+        public static void ShowMessage(string message)
+        {
+            MessageBox.Show(message, "Mededeling", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 }

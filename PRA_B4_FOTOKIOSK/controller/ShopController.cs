@@ -6,13 +6,11 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace PRA_B4_FOTOKIOSK.controller
 {
     public class ShopController
     {
-
         public static Home Window { get; set; }
         private double? runningTotal = 0;
         private List<OrderedProduct> orderedProducts = new List<OrderedProduct>();
@@ -38,7 +36,6 @@ namespace PRA_B4_FOTOKIOSK.controller
                 Description = "Maten XS/S/M/L/XL/XXL",
                 Price = 25.00
             });
-
 
             // Maak een nieuwe prijslijst string
             StringBuilder priceList = new StringBuilder("Prijzen:\n");
@@ -148,4 +145,3 @@ namespace PRA_B4_FOTOKIOSK.controller
         }
     }
 }
-

@@ -4,8 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace PRA_B4_FOTOKIOSK.controller
 {
@@ -14,36 +12,27 @@ namespace PRA_B4_FOTOKIOSK.controller
         // De window die we laten zien op het scherm
         public static Home Window { get; set; }
 
-
         // De lijst met fotos die we laten zien
         public List<KioskPhoto> PicturesToDisplay = new List<KioskPhoto>();
-        
-        
+
         // Start methode die wordt aangeroepen wanneer de foto pagina opent.
         public void Start()
         {
-
             // Initializeer de lijst met fotos
-            // WAARSCHUWING. ZONDER FILTER LAADT DIT ALLES!
-
-
             var now = DateTime.Now;
             int today = (int)now.DayOfWeek;
             var minTime = now.AddMinutes(-30); // 30 minuten geleden
             var maxTime = now.AddMinutes(-2);  // 2 minuten geleden
 
-            // foreach is een for-loop die door een array loopt
+            // Dictionary om de fotos met tijd van maken op te slaan
+            Dictionary<DateTime, string> photoDictionary = new Dictionary<DateTime, string>();
+
             foreach (string dir in Directory.GetDirectories(@"../../../fotos"))
             {
-
                 string folderName = Path.GetFileName(dir); //pakt de hele map 0_Zondag
                 string[] parts = folderName.Split('_'); //split op de underscore
                 if (parts.Length > 0 && int.TryParse(parts[0], out int dayFromFolder) && dayFromFolder == today)
                 {
-                    /**
-                    * dir string is de map waar de fotos in staan. Bijvoorbeeld:
-                    * \fotos\0_Zondag
-                    */
                     foreach (string file in Directory.GetFiles(dir))
                     {
                         string fileName = Path.GetFileNameWithoutExtension(file);
@@ -57,14 +46,26 @@ namespace PRA_B4_FOTOKIOSK.controller
                             var photoTime = new DateTime(now.Year, now.Month, now.Day, hour, minute, second);
                             if (photoTime >= minTime && photoTime <= maxTime)
                             {
-                                /**
-                                 * file string is de file van de foto. Bijvoorbeeld:
-                                 * \fotos\0_Zondag\10_05_30_id8824.jpg
-                                */
-                                PicturesToDisplay.Add(new KioskPhoto() { Id = 0, Source = file });
+                                // Voeg de foto toe aan de dictionary
+                                photoDictionary[photoTime] = file;
                             }
                         }
                     }
+                }
+            }
+
+            // Maak paren van fotos 60 seconden na elkaar
+            foreach (var photoTime in photoDictionary.Keys.ToList())
+            {
+                var pairedTime = photoTime.AddSeconds(60);
+                if (photoDictionary.ContainsKey(pairedTime))
+                {
+                    // Voeg ze beide toe aan de display
+                    PicturesToDisplay.Add(new KioskPhoto() { Id = 0, Source = photoDictionary[photoTime] });
+                    PicturesToDisplay.Add(new KioskPhoto() { Id = 0, Source = photoDictionary[pairedTime] });
+
+                    // Verwijder de gepaarde foto ivm duplicaten
+                    photoDictionary.Remove(pairedTime);
                 }
             }
 
@@ -75,8 +76,7 @@ namespace PRA_B4_FOTOKIOSK.controller
         // Wordt uitgevoerd wanneer er op de Refresh knop is geklikt
         public void RefreshButtonClick()
         {
-
+            
         }
-
     }
 }
